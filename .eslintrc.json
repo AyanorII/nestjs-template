@@ -1,0 +1,49 @@
+{
+	"env": {
+		"es2021": true,
+		"jest": true,
+		"node": true
+	},
+	"extends": [
+		"eslint:recommended",
+		"plugin:@typescript-eslint/recommended",
+		"plugin:prettier/recommended",
+		"plugin:@typescript-eslint/recommended-requiring-type-checking"
+	],
+	"parser": "@typescript-eslint/parser",
+	"parserOptions": {
+		"project": "./tsconfig.json",
+		"ecmaVersion": 12,
+		"sourceType": "module"
+	},
+	"plugins": ["@typescript-eslint", "import-helpers", "unused-imports"],
+	"rules": {
+    "@typescript-eslint/no-unused-vars": "error",
+		"@typescript-eslint/no-explicit-any": "error",
+		"@typescript-eslint/explicit-module-boundary-types": "off",
+		"@typescript-eslint/no-non-null-assertion": "off",
+		"import-helpers/order-imports": [
+			"error",
+			{
+				"newlinesBetween": "always",
+				"groups": [
+					"module",
+					"/^@shared/",
+					"absolute",
+					"/utils/",
+					"/constants/",
+					["parent", "sibling", "index"]
+				],
+				"alphabetize": { "order": "asc", "ignoreCase": true }
+			}
+		],
+		"unused-imports/no-unused-imports": "error",
+		"unused-imports/no-unused-vars": [
+			"error",
+			{ "vars": "all", "varsIgnorePattern": "^", "args": "after-used", "argsIgnorePattern": "^" }
+		],
+		"no-console": ["error", { "allow": ["error", "info"] }],
+		"no-duplicate-case": "error",
+		"no-duplicate-imports": "error"
+	}
+}
