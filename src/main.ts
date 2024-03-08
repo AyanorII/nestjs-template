@@ -9,11 +9,15 @@ import { AppModule } from "./app.module";
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
-	app.use(helmet());
-
 	const configService = app.get(ConfigService);
 	const logger = new Logger();
 
+	app.use(helmet());
+	app.enableCors({
+		origin: configService.get<Config["CORS_ORIGIN"]>("CORS_ORIGIN", {
+			infer: true,
+		}),
+	});
 	app.useGlobalPipes(new ValidationPipe());
 
 	const swaggerConfig = new DocumentBuilder()
