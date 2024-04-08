@@ -1,6 +1,7 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, UseGuards } from "@nestjs/common";
 
 import { AppService } from "./app.service";
+import { ClerkAuthGuard } from "./common/guards/clerk-auth.guard";
 
 @Controller()
 export class AppController {
@@ -9,5 +10,11 @@ export class AppController {
 	@Get()
 	getHello(): string {
 		return this.appService.getHello();
+	}
+
+	@UseGuards(ClerkAuthGuard)
+	@Get("protected")
+	getUsers() {
+		return this.appService.getUsers();
 	}
 }

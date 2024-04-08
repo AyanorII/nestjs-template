@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { Config } from "config/configuration";
+import * as cookieParser from "cookie-parser";
 import helmet from "helmet";
 
 import { AppModule } from "./app.module";
@@ -13,6 +14,7 @@ async function bootstrap() {
 	const logger = new Logger();
 
 	app.use(helmet());
+	app.use(cookieParser());
 	app.enableCors({
 		origin: configService.get<Config["CORS_ORIGIN"]>("CORS_ORIGIN", {
 			infer: true,
