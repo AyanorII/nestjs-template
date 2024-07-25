@@ -6,6 +6,7 @@ import { Config, configSchema } from "config/configuration";
 
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
+import { DatabaseModule } from "./database/database.module";
 
 @Module({
 	imports: [
@@ -23,6 +24,7 @@ import { AppService } from "./app.service";
 				},
 			],
 		}),
+		DatabaseModule,
 	],
 	controllers: [AppController],
 	providers: [

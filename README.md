@@ -45,6 +45,24 @@ $ yarn run start:dev
 $ yarn run start:prod
 ```
 
+## Running migrations
+
+First of all, make sure you have the required ENV vars set.
+
+```bash
+DB_HOST=
+DB_USER=
+DB_PASSWORD=
+DB_NAME=
+```
+
+If you get a `Migration failed with Error: getaddrinfo ENOTFOUND db` error, run the migration using
+
+```bash
+docker-compose exec app yarn kysely migration:latest
+```
+
+
 ## Test
 
 ```bash
