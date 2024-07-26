@@ -3,11 +3,13 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 
+import { DATABASE_TOKEN } from "./constants";
+
 @Module({
 	imports: [ConfigModule.forRoot()],
 	providers: [
 		{
-			provide: "Kysely",
+			provide: DATABASE_TOKEN,
 			useFactory: (configService: ConfigService) => {
 				return new Kysely({
 					dialect: new PostgresDialect({
@@ -23,6 +25,6 @@ import { Pool } from "pg";
 			inject: [ConfigService],
 		},
 	],
-	exports: ["Kysely"],
+	exports: [DATABASE_TOKEN],
 })
 export class DatabaseModule {}
