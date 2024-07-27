@@ -1,48 +1,25 @@
-import {
-	CanActivate,
-	ExecutionContext,
-	Injectable,
-	UnauthorizedException,
-} from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { JwtService } from "@nestjs/jwt";
-import { Config } from "config/configuration";
-import { Request } from "express";
+import { ExecutionContext, Injectable } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { AuthGuard } from "@nestjs/passport";
 
-import { JwtPayload } from "../types/jwt";
+import { IS_PUBLIC_KEY } from "../decorators/is_public.decorator";
 
 @Injectable()
-export class JwtGuard implements CanActivate {
-	constructor(
-		private readonly jwtService: JwtService,
-		private readonly configService: ConfigService<Config>
-	) {}
-
-	async canActivate(context: ExecutionContext): Promise<boolean> {
-		const request = context.switchToHttp().getRequest<Request>();
-		const token = this.extractTokenFromHeader(request);
-
-		if (!token) {
-			throw new UnauthorizedException();
-		}
-
-		try {
-			const payload: JwtPayload = await this.jwtService.verifyAsync(token, {
-				secret: this.configService.get("JWT_SECRET"),
-			});
-			// 💡 We're assigning the payload to the request object here
-			// so that we can access it in our route handlers
-			request["user"] = payload;
-		} catch {
-			throw new UnauthorizedException();
-		}
-
-		return true;
+export class JwtGuard extends AuthGuard("jwt") {
+	constructor(private readonly reflector: Reflector) {
+		super();
 	}
 
-	private extractTokenFromHeader(request: Request): string | undefined {
-		const [type, token] = request.headers.authorization?.split(" ") ?? [];
+	canActivate(context: ExecutionContext) {
+		const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+			context.getHandler(),
+			context.getClass(),
+		]);
 
-		return type === "Bearer" ? token : undefined;
+		if (isPublic) {
+			return true;
+		}
+
+		return super.canActivate(context);
 	}
 }

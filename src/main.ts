@@ -27,6 +27,8 @@ async function bootstrap() {
 	app.setGlobalPrefix("api");
 	app.useGlobalFilters(new AllExceptionsFilter());
 
+	app.useGlobalGuards();
+
 	app.use(
 		session({
 			secret: "fsdjfoijasoijfoasjiva",

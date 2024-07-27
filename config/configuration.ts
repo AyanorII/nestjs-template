@@ -1,21 +1,29 @@
 import * as Joi from "joi";
 
 export interface Config {
+	// App
 	PORT: number;
 	NODE_ENV: string;
 	CORS_ORIGIN: string;
 	THROTTLER_TTL: number;
 	THROTTLER_LIMIT: number;
+
+	// Database
 	DB_HOST: string;
 	DB_USER: string;
 	DB_PASSWORD: string;
 	DB_NAME: string;
 	DATABASE_URL: string;
+
+	// JWT
 	JWT_SECRET: string;
 	JWT_EXPIRES_IN: string;
+	REFRESH_TOKEN_SECRET: string;
+	REFRESH_TOKEN_EXPIRES_IN: string;
 }
 
 export const configSchema = Joi.object<Config>({
+	//App
 	PORT: Joi.number().default(8000),
 	NODE_ENV: Joi.string()
 		.valid("development", "production", "test")
@@ -34,5 +42,6 @@ export const configSchema = Joi.object<Config>({
 	// JWT
 	JWT_SECRET: Joi.string().required(),
 	JWT_EXPIRES_IN: Joi.string().required(),
-	// Add your own configuration options here
+	REFRESH_TOKEN_SECRET: Joi.string().required(),
+	REFRESH_TOKEN_EXPIRES_IN: Joi.string().required(),
 });

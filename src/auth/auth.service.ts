@@ -1,21 +1,24 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { JwtService } from "@nestjs/jwt";
+import { JwtService, JwtSignOptions } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import { Config } from "config/configuration";
 import { Users } from "db/schema";
+import { Selectable } from "kysely";
+import { RefreshTokensService } from "src/refresh-tokens/refresh-tokens.service";
 import { CreateUserDTO } from "src/users/dtos/create-user.dto";
 import { UsersService } from "src/users/users.service";
 
 import { LoginEmailPasswordDTO } from "./dtos/login-email-password.dto";
-import { AccessToken } from "./types/jwt";
+import { RefreshTokenPayload } from "./types/jwt";
 
 @Injectable()
 export class AuthService {
 	constructor(
 		private readonly usersService: UsersService,
 		private readonly jwtService: JwtService,
-		private readonly configService: ConfigService<Config>
+		private readonly configService: ConfigService<Config>,
+		private readonly refreshTokenService: RefreshTokensService
 	) {}
 
 	async registerWithEmailPassword(createUserDTO: CreateUserDTO) {
@@ -28,21 +31,19 @@ export class AuthService {
 	) {
 		const user = await this.validateUser({ email, password });
 
-		const payload = { sub: user.id, email: user.email };
-		const accessToken: AccessToken = await this.jwtService.signAsync(payload, {
-			expiresIn: this.configService.get("JWT_EXPIRES_IN"),
-			secret: this.configService.get("JWT_SECRET"),
-		});
+		const { accessToken, refreshToken, refreshTokenExpiresIn } =
+			await this.generateTokens(user);
 
-		return { access_token: accessToken };
+		return { accessToken, refreshToken, expiresIn: refreshTokenExpiresIn };
 	}
 
-	// async validateUser(user: CreateUserDTO) {
-	// 	const foundUser = await this.usersService.findOneByEmail(user.email);
-	// 	if (foundUser) return foundUser;
+	async logout(userId: Selectable<Users>["id"], refreshToken: string) {
+		const decoded: RefreshTokenPayload = this.jwtService.decode(refreshToken);
 
-	// 	return this.usersService.createUser(user);
-	// }
+		await this.refreshTokenService.deleteToken({ id: decoded.jti, userId });
+		await this.refreshTokenService.deleteExpiredTokens(userId);
+	}
+
 	async validateUser(loginEmailPasswordDTO: LoginEmailPasswordDTO) {
 		const { email, password } = loginEmailPasswordDTO;
 
@@ -65,13 +66,63 @@ export class AuthService {
 		return foundUser;
 	}
 
-	async findAllUsers() {
-		return await this.usersService.findAll();
-	}
-
 	async validatePassword(password: string, salt: string, hash: string) {
 		const hashedPassword = await bcrypt.hash(password, salt);
 
 		return hashedPassword === hash;
+	}
+
+	async signPayload(
+		user: Pick<Selectable<Users>, "id" | "email">,
+		options?: JwtSignOptions
+	) {
+		return this.jwtService.signAsync(
+			{
+				sub: user.id,
+				email: user.email,
+			},
+			options
+		);
+	}
+
+	async generateAccessToken(user: Selectable<Users>) {
+		const accessToken = await this.signPayload(user, {
+			secret: this.configService.get("JWT_SECRET"),
+			expiresIn: this.configService.get("JWT_EXPIRES_IN"),
+		});
+
+		return accessToken;
+	}
+
+	async generateTokens(user: Selectable<Users>) {
+		const [accessToken, { refreshToken, expiresIn }] = await Promise.all([
+			this.generateAccessToken(user),
+			this.refreshTokenService.createToken(user),
+		]);
+
+		return {
+			accessToken,
+			refreshToken,
+			refreshTokenExpiresIn: expiresIn,
+		};
+	}
+
+	async refreshToken(user: Selectable<Users>, token: string) {
+		const decoded: RefreshTokenPayload = this.jwtService.decode(token);
+
+		await this.refreshTokenService.deleteToken({
+			id: decoded.jti,
+			userId: user.id,
+		});
+
+		const { refreshToken, expiresIn } =
+			await this.refreshTokenService.createToken(user);
+		const accessToken = await this.generateAccessToken(user);
+
+		return {
+			accessToken,
+			refreshToken,
+			refreshTokenExpiresIn: expiresIn,
+		};
 	}
 }

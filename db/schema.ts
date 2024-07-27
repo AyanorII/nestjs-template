@@ -7,6 +7,16 @@ export type Generated<T> =
 
 export type Provider = "google" | "local";
 
+export type Timestamp = ColumnType<Date, Date | string, Date | string>;
+
+export interface RefreshTokens {
+	expires_at: Timestamp;
+	id: Generated<string>;
+	issued_at: Timestamp;
+	token: string;
+	user_id: string;
+}
+
 export interface Users {
 	email: string;
 	first_name: string | null;
@@ -19,5 +29,6 @@ export interface Users {
 }
 
 export interface DB {
+	refresh_tokens: RefreshTokens;
 	users: Users;
 }

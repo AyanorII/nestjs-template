@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
+import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { Config, configSchema } from "config/configuration";
@@ -8,7 +9,9 @@ import { Config, configSchema } from "config/configuration";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthModule } from "./auth/auth.module";
+import { JwtGuard } from "./auth/guards/jwt.guard";
 import { DatabaseModule } from "./database/database.module";
+import { RefreshTokensModule } from "./refresh-tokens/refresh-tokens.module";
 import { UsersModule } from "./users/users.module";
 
 @Module({
@@ -33,6 +36,18 @@ import { UsersModule } from "./users/users.module";
 		DatabaseModule,
 		AuthModule,
 		UsersModule,
+		RefreshTokensModule,
+		JwtModule.registerAsync({
+			imports: [ConfigModule],
+			inject: [ConfigService],
+			useFactory: (config: ConfigService<Config>) => ({
+				secret: config.get("JWT_SECRET"),
+				signOptions: {
+					expiresIn: config.get("JWT_EXPIRES_IN"),
+				},
+				global: true,
+			}),
+		}),
 	],
 	controllers: [AppController],
 	providers: [
@@ -40,6 +55,10 @@ import { UsersModule } from "./users/users.module";
 		{
 			provide: APP_GUARD,
 			useClass: ThrottlerGuard,
+		},
+		{
+			provide: APP_GUARD,
+			useClass: JwtGuard,
 		},
 	],
 })

@@ -22,7 +22,7 @@
     "db:generate-types": "kysely-codegen --out-file db/schema.ts",
     "db:migrate": "kysely migrate:latest && yarn db:generate-types",
     "db:migrate-up": "kysely migrate:up && yarn db:generate-types",
-    "db:migrate-down": "kysely migrate:down && yarn db:generate-types",
+    "db:migrate-down": "kysely migrate down && yarn db:generate-types",
     "db:rollback": "kysely migrate:rollback --all && yarn db:generate-types",
     "db:migrate-create": "kysely migrate:make"
   },

@@ -13,12 +13,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
 	catch(exception: unknown, host: ArgumentsHost) {
 		const ctx = host.switchToHttp();
 		const response = ctx.getResponse<Response>();
-		const status: HttpStatus =
-			exception instanceof HttpException
-				? exception.getStatus()
-				: HttpStatus.INTERNAL_SERVER_ERROR;
+
+		console.error(exception);
 
 		if (exception instanceof HttpException) {
+			const status: HttpStatus =
+				exception instanceof HttpException
+					? exception.getStatus()
+					: HttpStatus.INTERNAL_SERVER_ERROR;
+
 			response.status(status).json(exception.getResponse());
 
 			return;
@@ -29,6 +32,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
 				statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
 				message: exception.message,
 				error: exception.detail,
+			});
+
+			return;
+		}
+
+		if (exception instanceof Error) {
+			response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+				statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+				error: "Internal Server Error",
+				message: exception.message,
 			});
 
 			return;
