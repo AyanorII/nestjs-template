@@ -5,7 +5,10 @@ export async function up(db: Kysely<DB>): Promise<void> {
 	// up migration code goes here...
 	// note: up migrations are mandatory. you must implement this function.
 	// For more info, see: https://kysely.dev/docs/migrations
-	await db.schema.createType("provider").asEnum(["local", "google"]).execute();
+	await db.schema
+		.createType("provider")
+		.asEnum(["local", "google", "github", "facebook"])
+		.execute();
 
 	await db.schema
 		.createTable("users")

@@ -24,7 +24,8 @@
     "db:migrate-up": "kysely migrate:up && yarn db:generate-types",
     "db:migrate-down": "kysely migrate down && yarn db:generate-types",
     "db:rollback": "kysely migrate:rollback --all && yarn db:generate-types",
-    "db:migrate-create": "kysely migrate:make"
+    "db:migrate-create": "kysely migrate:make",
+    "db:migrate-list": "kysely migrate:list"
   },
   "lint-staged": {
     "{src, test}/**/*.ts": [
