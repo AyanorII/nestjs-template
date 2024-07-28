@@ -8,8 +8,9 @@ import { JwtService, JwtSignOptions } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import { Config } from "config/configuration";
 import { Users } from "db/schema";
-import { Selectable } from "kysely";
-import { Profile } from "passport-google-oauth20";
+import { Insertable, Selectable } from "kysely";
+import { type Profile as GithubProfile } from "passport-github2";
+import { type Profile as GoogleProfile } from "passport-google-oauth20";
 import { RefreshTokensService } from "src/refresh-tokens/refresh-tokens.service";
 import { RegisterWithEmailPasswordDTO } from "src/users/dtos/register-with-email-password.dto";
 import { UsersService } from "src/users/users.service";
@@ -85,21 +86,40 @@ export class AuthService {
 		return foundUser;
 	}
 
-	async validateGoogleUser(profile: Profile) {
-		const { emails, name } = profile;
-		const email = emails?.[0].value;
+	async validateGoogleUser(profile: GoogleProfile) {
+		const { emails, name, photos } = profile;
 
-		if (!email) {
+		if (!emails?.length) {
 			throw new BadRequestException("Email not provided by Google");
 		}
 
-		const user = await this.usersService.createUserWithGoogle({
-			email,
+		const googleUser: Insertable<Users> = {
+			email: emails[0].value,
 			first_name: name?.givenName,
 			last_name: name?.familyName,
-			photo_url: profile.photos?.[0].value,
-		});
+			photo_url: photos?.[0]?.value,
+			provider: "google",
+		};
 
+		const user = await this.usersService.upsert(googleUser);
+		return user;
+	}
+
+	async validateGithubUser(profile: GithubProfile) {
+		const { emails, displayName, photos } = profile;
+
+		if (!emails?.length) {
+			throw new BadRequestException("Email not provided by Github");
+		}
+
+		const githubUser: Insertable<Users> = {
+			email: emails[0].value,
+			first_name: displayName,
+			photo_url: photos?.[0]?.value,
+			provider: "github",
+		};
+
+		const user = await this.usersService.upsert(githubUser);
 		return user;
 	}
 

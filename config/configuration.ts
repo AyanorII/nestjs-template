@@ -26,6 +26,10 @@ export interface Config {
 	GOOGLE_CLIENT_ID: string;
 	GOOGLE_CLIENT_SECRET: string;
 	GOOGLE_CALLBACK_URL: string;
+
+	GITHUB_CLIENT_ID: string;
+	GITHUB_CLIENT_SECRET: string;
+	GITHUB_CALLBACK_URL: string;
 }
 
 export const configSchema = Joi.object<Config>({
@@ -56,4 +60,8 @@ export const configSchema = Joi.object<Config>({
 	GOOGLE_CLIENT_ID: Joi.string().required(),
 	GOOGLE_CLIENT_SECRET: Joi.string().required(),
 	GOOGLE_CALLBACK_URL: Joi.string().required(),
+
+	GITHUB_CLIENT_ID: Joi.string().required(),
+	GITHUB_CLIENT_SECRET: Joi.string().required(),
+	GITHUB_CALLBACK_URL: Joi.string().required(),
 });

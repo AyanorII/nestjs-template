@@ -25,13 +25,6 @@ export class UsersService {
 		});
 	}
 
-	async createUserWithGoogle(user: Omit<Insertable<Users>, "provider">) {
-		return this.usersRepository.upsert({
-			...user,
-			provider: "google",
-		});
-	}
-
 	async findOneByEmail(email: string) {
 		return this.usersRepository.findOneByEmail(email);
 	}

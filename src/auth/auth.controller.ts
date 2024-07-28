@@ -16,6 +16,7 @@ import { RegisterWithEmailPasswordDTO } from "src/users/dtos/register-with-email
 import { AuthService } from "./auth.service";
 import { Public } from "./decorators/is_public.decorator";
 import { LoginEmailPasswordDTO } from "./dtos/login-email-password.dto";
+import { GithubAuthGuard } from "./guards/github.guard";
 import { GoogleAuthGuard } from "./guards/google.guard";
 import { JwtGuard } from "./guards/jwt.guard";
 import { RefreshTokenGuard } from "./guards/refresh-token.guard";
@@ -106,6 +107,32 @@ export class AuthController {
 	@UseGuards(GoogleAuthGuard)
 	@Get("google/callback")
 	async googleLoginCallback(@Req() req: Request, @Res() res: Response) {
+		const user = req.user as Selectable<Users>;
+
+		const {
+			accessToken,
+			refreshToken,
+			refreshTokenExpiresIn: expiresIn,
+		} = await this.authService.generateTokens(user);
+
+		res.status(200).cookie("refresh_token", refreshToken, {
+			httpOnly: true,
+			secure: true,
+			maxAge: expiresIn - Date.now(),
+		});
+
+		return res.json({
+			access_token: accessToken,
+		});
+	}
+
+	@UseGuards(GithubAuthGuard)
+	@Get("github")
+	async githubLogin() {}
+
+	@UseGuards(GithubAuthGuard)
+	@Get("github/callback")
+	async githubCallback(@Req() req: Request, @Res() res: Response) {
 		const user = req.user as Selectable<Users>;
 
 		const {
