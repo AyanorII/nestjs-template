@@ -9,7 +9,6 @@ import { Config, configSchema } from "config/configuration";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthModule } from "./auth/auth.module";
-import { JwtGuard } from "./auth/guards/jwt.guard";
 import { DatabaseModule } from "./database/database.module";
 import { RefreshTokensModule } from "./refresh-tokens/refresh-tokens.module";
 import { UsersModule } from "./users/users.module";
@@ -56,10 +55,10 @@ import { UsersModule } from "./users/users.module";
 			provide: APP_GUARD,
 			useClass: ThrottlerGuard,
 		},
-		{
-			provide: APP_GUARD,
-			useClass: JwtGuard,
-		},
+		// {
+		// 	provide: APP_GUARD,
+		// 	useClass: JwtGuard,
+		// },
 	],
 })
 export class AppModule {}

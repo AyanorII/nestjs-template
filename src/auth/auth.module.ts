@@ -7,6 +7,8 @@ import { UsersModule } from "src/users/users.module";
 
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
+import { SessionSerializer } from "./serializers/session.serializer";
+import { GoogleStrategy } from "./strategies/google.strategy";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 import { RefreshTokenStrategy } from "./strategies/refresh-token.strategy";
 
@@ -27,6 +29,12 @@ import { RefreshTokenStrategy } from "./strategies/refresh-token.strategy";
 		RefreshTokensModule,
 	],
 	controllers: [AuthController],
-	providers: [AuthService, JwtStrategy, RefreshTokenStrategy],
+	providers: [
+		AuthService,
+		JwtStrategy,
+		RefreshTokenStrategy,
+		GoogleStrategy,
+		SessionSerializer,
+	],
 })
 export class AuthModule {}

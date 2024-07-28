@@ -9,7 +9,7 @@ import {
 import { Provider, Users } from "db/schema";
 import { Insertable } from "kysely";
 
-export class CreateUserDTO implements Omit<Insertable<Users>, "passwordSalt"> {
+export class CreateUserDTO implements Omit<Insertable<Users>, "password_salt"> {
 	@ApiProperty()
 	@IsEmail()
 	email: string;

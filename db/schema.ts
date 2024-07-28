@@ -22,8 +22,8 @@ export interface Users {
 	first_name: string | null;
 	id: Generated<string>;
 	last_name: string | null;
-	password: string;
-	passwordSalt: string;
+	password: string | null;
+	password_salt: string | null;
 	photo_url: string | null;
 	provider: Provider;
 }

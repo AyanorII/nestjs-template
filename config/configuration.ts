@@ -7,6 +7,7 @@ export interface Config {
 	CORS_ORIGIN: string;
 	THROTTLER_TTL: number;
 	THROTTLER_LIMIT: number;
+	SESSION_SECRET: string;
 
 	// Database
 	DB_HOST: string;
@@ -20,6 +21,11 @@ export interface Config {
 	JWT_EXPIRES_IN: string;
 	REFRESH_TOKEN_SECRET: string;
 	REFRESH_TOKEN_EXPIRES_IN: string;
+
+	// OAuth providers
+	GOOGLE_CLIENT_ID: string;
+	GOOGLE_CLIENT_SECRET: string;
+	GOOGLE_CALLBACK_URL: string;
 }
 
 export const configSchema = Joi.object<Config>({
@@ -31,6 +37,7 @@ export const configSchema = Joi.object<Config>({
 	CORS_ORIGIN: Joi.string().required(),
 	THROTTLER_TTL: Joi.number().default(60_000), // 60 seconds
 	THROTTLER_LIMIT: Joi.number().default(60),
+	SESSION_SECRET: Joi.string().required(),
 
 	// Database
 	DB_HOST: Joi.string().required(),
@@ -44,4 +51,9 @@ export const configSchema = Joi.object<Config>({
 	JWT_EXPIRES_IN: Joi.string().required(),
 	REFRESH_TOKEN_SECRET: Joi.string().required(),
 	REFRESH_TOKEN_EXPIRES_IN: Joi.string().required(),
+
+	// OAuth providers
+	GOOGLE_CLIENT_ID: Joi.string().required(),
+	GOOGLE_CLIENT_SECRET: Joi.string().required(),
+	GOOGLE_CALLBACK_URL: Joi.string().required(),
 });

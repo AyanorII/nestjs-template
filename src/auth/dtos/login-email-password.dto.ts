@@ -1,10 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsEmail, IsString } from "class-validator";
-import { Users } from "db/schema";
 
-export class LoginEmailPasswordDTO
-	implements Pick<Users, "email" | "password">
-{
+export class LoginEmailPasswordDTO {
 	@ApiProperty()
 	@IsEmail()
 	email: string;

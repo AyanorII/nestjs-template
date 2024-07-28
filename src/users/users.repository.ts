@@ -27,4 +27,13 @@ export class UsersRepository {
 			.returningAll()
 			.executeTakeFirstOrThrow();
 	}
+
+	async upsert(dto: Insertable<Users>) {
+		return this.db
+			.insertInto("users")
+			.values(dto)
+			.onConflict((oc) => oc.column("email").doUpdateSet(dto))
+			.returningAll()
+			.executeTakeFirstOrThrow();
+	}
 }

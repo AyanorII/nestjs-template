@@ -1,12 +1,17 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+	BadRequestException,
+	Injectable,
+	UnauthorizedException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService, JwtSignOptions } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import { Config } from "config/configuration";
 import { Users } from "db/schema";
 import { Selectable } from "kysely";
+import { Profile } from "passport-google-oauth20";
 import { RefreshTokensService } from "src/refresh-tokens/refresh-tokens.service";
-import { CreateUserDTO } from "src/users/dtos/create-user.dto";
+import { RegisterWithEmailPasswordDTO } from "src/users/dtos/register-with-email-password.dto";
 import { UsersService } from "src/users/users.service";
 
 import { LoginEmailPasswordDTO } from "./dtos/login-email-password.dto";
@@ -21,14 +26,23 @@ export class AuthService {
 		private readonly refreshTokenService: RefreshTokensService
 	) {}
 
-	async registerWithEmailPassword(createUserDTO: CreateUserDTO) {
-		return await this.usersService.createUser(createUserDTO);
+	async registerWithEmailPassword(
+		registerWithEmailPasswordDTO: RegisterWithEmailPasswordDTO
+	) {
+		const user = await this.usersService.createUserWithEmailPassword(
+			registerWithEmailPasswordDTO
+		);
+
+		const { accessToken, refreshToken, refreshTokenExpiresIn } =
+			await this.generateTokens(user);
+
+		return { accessToken, refreshToken, expiresIn: refreshTokenExpiresIn };
 	}
 
 	async loginWithEmailPassword(
-		email: Users["email"],
-		password: Users["password"]
+		loginWithEmailPasswordDTO: LoginEmailPasswordDTO
 	) {
+		const { email, password } = loginWithEmailPasswordDTO;
 		const user = await this.validateUser({ email, password });
 
 		const { accessToken, refreshToken, refreshTokenExpiresIn } =
@@ -49,13 +63,18 @@ export class AuthService {
 
 		const foundUser = await this.usersService.findOneByEmail(email);
 
-		if (!foundUser) {
+		if (
+			!foundUser ||
+			!foundUser.password ||
+			!foundUser.password_salt ||
+			foundUser.provider !== "local"
+		) {
 			throw new UnauthorizedException("Invalid credentials");
 		}
 
 		const isValidPassword = await this.validatePassword(
 			password,
-			foundUser.passwordSalt,
+			foundUser.password_salt,
 			foundUser.password
 		);
 
@@ -64,6 +83,24 @@ export class AuthService {
 		}
 
 		return foundUser;
+	}
+
+	async validateGoogleUser(profile: Profile) {
+		const { emails, name } = profile;
+		const email = emails?.[0].value;
+
+		if (!email) {
+			throw new BadRequestException("Email not provided by Google");
+		}
+
+		const user = await this.usersService.createUserWithGoogle({
+			email,
+			first_name: name?.givenName,
+			last_name: name?.familyName,
+			photo_url: profile.photos?.[0].value,
+		});
+
+		return user;
 	}
 
 	async validatePassword(password: string, salt: string, hash: string) {

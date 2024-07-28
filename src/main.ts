@@ -13,27 +13,24 @@ import { AllExceptionsFilter } from "./common/filters/exception.filter";
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
-	const configService = app.get(ConfigService);
+	const configService = app.get(ConfigService<Config>);
 	const logger = new Logger();
 
 	app.use(cookieParser());
 	app.use(helmet());
 	app.enableCors({
-		origin: configService.get<Config["CORS_ORIGIN"]>("CORS_ORIGIN", {
-			infer: true,
-		}),
+		origin: configService.get("CORS_ORIGIN"),
+		credentials: true,
 	});
 	app.useGlobalPipes(new ValidationPipe());
 	app.setGlobalPrefix("api");
 	app.useGlobalFilters(new AllExceptionsFilter());
 
-	app.useGlobalGuards();
-
 	app.use(
 		session({
-			secret: "fsdjfoijasoijfoasjiva",
-			saveUninitialized: true,
-			resave: true,
+			secret: configService.get("SESSION_SECRET") as string,
+			saveUninitialized: false,
+			resave: false,
 			cookie: {
 				maxAge: 60000,
 			},
@@ -58,7 +55,7 @@ async function bootstrap() {
 	const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
 	SwaggerModule.setup("docs", app, swaggerDocument);
 
-	const port = configService.get<Config["PORT"]>("PORT") || 8000;
+	const port: number = configService.get("PORT") || 8000;
 	await app.listen(port);
 	logger.log(`Server is running on port: ${port}`);
 }

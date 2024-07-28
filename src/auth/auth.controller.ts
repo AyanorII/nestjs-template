@@ -11,11 +11,13 @@ import { ApiBearerAuth } from "@nestjs/swagger";
 import { Users } from "db/schema";
 import { Request, Response } from "express";
 import { Selectable } from "kysely";
-import { CreateUserDTO } from "src/users/dtos/create-user.dto";
+import { RegisterWithEmailPasswordDTO } from "src/users/dtos/register-with-email-password.dto";
 
 import { AuthService } from "./auth.service";
 import { Public } from "./decorators/is_public.decorator";
 import { LoginEmailPasswordDTO } from "./dtos/login-email-password.dto";
+import { GoogleAuthGuard } from "./guards/google.guard";
+import { JwtGuard } from "./guards/jwt.guard";
 import { RefreshTokenGuard } from "./guards/refresh-token.guard";
 
 @Controller("auth")
@@ -24,25 +26,39 @@ export class AuthController {
 
 	@Public()
 	@Post("register")
-	async register(@Body() body: CreateUserDTO) {
-		return this.authService.registerWithEmailPassword(body);
+	async register(
+		@Body() body: RegisterWithEmailPasswordDTO,
+		@Res() res: Response
+	) {
+		const { accessToken, refreshToken, expiresIn } =
+			await this.authService.registerWithEmailPassword(body);
+
+		res.cookie("refresh_token", refreshToken, {
+			httpOnly: true,
+			secure: true,
+			maxAge: expiresIn - Date.now(),
+		});
+
+		return res.json({
+			access_token: accessToken,
+		});
 	}
 
 	@Public()
 	@Post("login")
 	async login(@Body() body: LoginEmailPasswordDTO, @Res() res: Response) {
 		const { accessToken, refreshToken, expiresIn } =
-			await this.authService.loginWithEmailPassword(body.email, body.password);
+			await this.authService.loginWithEmailPassword(body);
 
-		res
-			.cookie("refresh_token", refreshToken, {
-				httpOnly: true,
-				secure: true,
-				maxAge: expiresIn - Date.now(),
-			})
-			.send({
-				access_token: accessToken,
-			});
+		res.cookie("refresh_token", refreshToken, {
+			httpOnly: true,
+			secure: true,
+			maxAge: expiresIn - Date.now(),
+		});
+
+		return res.json({
+			access_token: accessToken,
+		});
 	}
 
 	@UseGuards(RefreshTokenGuard)
@@ -57,15 +73,15 @@ export class AuthController {
 			refreshTokenExpiresIn: expiresIn,
 		} = await this.authService.refreshToken(user, refreshToken);
 
-		res
-			.cookie("refresh_token", newRefreshToken, {
-				httpOnly: true,
-				secure: true,
-				maxAge: expiresIn - Date.now(),
-			})
-			.send({
-				access_token: accessToken,
-			});
+		res.cookie("refresh_token", newRefreshToken, {
+			httpOnly: true,
+			secure: true,
+			maxAge: expiresIn - Date.now(),
+		});
+
+		return res.json({
+			access_token: accessToken,
+		});
 	}
 
 	@UseGuards(RefreshTokenGuard)
@@ -76,11 +92,40 @@ export class AuthController {
 
 		await this.authService.logout(user.id, refreshToken);
 
-		res.clearCookie("refresh_token").send({
+		res.clearCookie("refresh_token");
+
+		return res.json({
 			message: "Successfully logged out",
 		});
 	}
 
+	@UseGuards(GoogleAuthGuard)
+	@Get("google")
+	async googleLogin() {}
+
+	@UseGuards(GoogleAuthGuard)
+	@Get("google/callback")
+	async googleLoginCallback(@Req() req: Request, @Res() res: Response) {
+		const user = req.user as Selectable<Users>;
+
+		const {
+			accessToken,
+			refreshToken,
+			refreshTokenExpiresIn: expiresIn,
+		} = await this.authService.generateTokens(user);
+
+		res.status(200).cookie("refresh_token", refreshToken, {
+			httpOnly: true,
+			secure: true,
+			maxAge: expiresIn - Date.now(),
+		});
+
+		return res.json({
+			access_token: accessToken,
+		});
+	}
+
+	@UseGuards(JwtGuard)
 	@Get("protected")
 	@ApiBearerAuth("JWT")
 	protected(@Req() request: Request) {
