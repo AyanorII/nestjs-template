@@ -30,6 +30,12 @@ export interface Config {
 	GITHUB_CLIENT_ID: string;
 	GITHUB_CLIENT_SECRET: string;
 	GITHUB_CALLBACK_URL: string;
+
+	// Mailer
+	MAIL_USER: string;
+	MAIL_PASSWORD: string;
+	MAIL_HOST: string;
+	MAIL_PORT: number;
 }
 
 export const configSchema = Joi.object<Config>({
@@ -64,4 +70,10 @@ export const configSchema = Joi.object<Config>({
 	GITHUB_CLIENT_ID: Joi.string().required(),
 	GITHUB_CLIENT_SECRET: Joi.string().required(),
 	GITHUB_CALLBACK_URL: Joi.string().required(),
+
+	// Mailer
+	MAIL_USER: Joi.string().required(),
+	MAIL_PASSWORD: Joi.string().required(),
+	MAIL_HOST: Joi.string().required(),
+	MAIL_PORT: Joi.number().required(),
 });

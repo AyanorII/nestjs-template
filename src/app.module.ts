@@ -1,3 +1,5 @@
+import { MailerModule } from "@nestjs-modules/mailer";
+import { HandlebarsAdapter } from "@nestjs-modules/mailer/dist/adapters/handlebars.adapter";
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
@@ -45,6 +47,31 @@ import { UsersModule } from "./users/users.module";
 					expiresIn: config.get("JWT_EXPIRES_IN"),
 				},
 				global: true,
+			}),
+		}),
+		MailerModule.forRootAsync({
+			imports: [ConfigModule],
+			inject: [ConfigService],
+			useFactory: (config: ConfigService<Config>) => ({
+				transport: {
+					host: config.get("MAIL_HOST"),
+					port: config.get("MAIL_PORT"),
+					secure: config.get("NODE_ENV") === "production",
+					auth: {
+						user: config.get("MAIL_USER"),
+						pass: config.get("MAIL_PASSWORD"),
+					},
+				},
+				defaults: {
+					from: `"No Reply" <${config.get("MAIL_USER")}>`,
+				},
+				template: {
+					dir: __dirname + "/templates",
+					adapter: new HandlebarsAdapter(),
+					options: {
+						strict: true,
+					},
+				},
 			}),
 		}),
 	],

@@ -12,6 +12,13 @@ services:
     ports:
       - '5432:5432'
 
+  maildev:
+    image: soulteary/maildev
+    container_name: maildev
+    ports:
+      - '1080:1080'
+      - '1025:1025'
+
   app:
     build:
       context: .
